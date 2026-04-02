@@ -1,0 +1,750 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <!-- 確保為手機版原生比例，並防止使用者縮放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- iOS Web App 標籤 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="北一區理專">
+    <meta name="theme-color" content="#4338ca"> <!-- 對應 Tailwind indigo-700 -->
+    
+    <!-- 產生 Web App Manifest 以支援 Android 加入主畫面 -->
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E5%8C%97%E4%B8%80%E5%8D%80%E7%90%86%E5%B0%88App%22%2C%22short_name%22%3A%22%E5%8C%97%E4%B8%80%E5%8D%80%E7%90%86%E5%B0%88%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%234338ca%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2942%2F2942150.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+    
+    <title>北一區 | 理專戰略 App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body { background-color: #cbd5e1; /* 桌面端底色 */ }
+        .app-container {
+            max-w-md; margin: 0 auto; background-color: #f8fafc;
+            min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .pt-safe { padding-top: env(safe-area-inset-top); }
+        
+        /* 底部導覽列狀態 */
+        .nav-item { color: #94a3b8; transition: all 0.2s; }
+        .nav-active { color: #4f46e5; transform: translateY(-2px); }
+        
+        /* 點擊效果 */
+        .active-scale:active { transform: scale(0.97); }
+        
+        .progress-bar-striped {
+            background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- App 模擬容器 -->
+<div class="app-container">
+
+    <!-- 頂部 Header -->
+    <header class="bg-indigo-700 text-white px-4 py-3 pt-safe sticky top-0 z-40 shrink-0 shadow-md flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-crown text-yellow-400 text-xl"></i>
+            <div>
+                <h1 class="text-base font-bold leading-tight">北一區戰略 App</h1>
+                <div class="text-[10px] text-indigo-200">Q2 獎勵儀表板 (04/01-06/30)</div>
+            </div>
+        </div>
+        <button onclick="showInstallModal()" class="bg-indigo-600 hover:bg-indigo-800 text-white rounded-full w-8 h-8 flex items-center justify-center transition active-scale shadow-inner">
+            <i class="fas fa-arrow-down"></i>
+        </button>
+    </header>
+
+    <!-- 主要內容區 (可滾動) -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-5 pb-24 no-scrollbar">
+
+        <!-- 每日激勵金句 (每次開啟隨機顯示) -->
+        <div class="bg-gradient-to-r from-blue-900 to-indigo-800 text-white p-4 rounded-xl shadow flex items-start gap-3">
+            <div class="bg-white/20 w-8 h-8 flex items-center justify-center rounded-full text-yellow-300 shrink-0"><i class="fas fa-quote-left text-sm"></i></div>
+            <div>
+                <h3 class="font-bold text-blue-100 text-sm mb-1">每日激勵金句</h3>
+                <p id="dailyQuoteDisplay" class="text-xs leading-relaxed text-slate-50 italic">
+                    <!-- JS 動態載入金句 -->
+                </p>
+            </div>
+        </div>
+
+        <!-- ================= 頁面 1：基金加碼查詢 ================= -->
+        <div id="view-fundQuery" class="space-y-4 block animate-fade-in">
+            
+            <!-- 計績倍數橫向滾動卡片 -->
+            <div class="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-4 px-4">
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-orange-100 min-w-[140px] shrink-0 border-l-4 border-l-orange-500">
+                    <div class="text-orange-600 font-bold text-xs">全新戶 (New ID)</div>
+                    <div class="text-xl font-black mt-1">1.2 倍</div>
+                    <div class="text-[10px] text-slate-500 mt-1">首次單筆加成</div>
+                </div>
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-green-100 min-w-[140px] shrink-0 border-l-4 border-l-green-500">
+                    <div class="text-green-600 font-bold text-xs">新資金 (New Money)</div>
+                    <div class="text-xl font-black mt-1">1.1 倍</div>
+                    <div class="text-[10px] text-slate-500 mt-1">淨銷量>0適用</div>
+                </div>
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-indigo-100 min-w-[140px] shrink-0 border-l-4 border-l-indigo-500">
+                    <div class="text-indigo-600 font-bold text-xs">季獎勵關鍵</div>
+                    <div class="text-xl font-black mt-1">專案高權重</div>
+                    <div class="text-[10px] text-slate-500 mt-1">專案/特選加碼</div>
+                </div>
+            </div>
+
+            <!-- 搜尋與篩選 (App樣式) -->
+            <div class="flex gap-2 sticky top-0 z-10 bg-[#f8fafc] py-2">
+                <div class="flex-1 relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="基金名稱、代碼..." 
+                           class="w-full pl-9 pr-3 py-2.5 border-none bg-white shadow-sm rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-400">
+                </div>
+                <select id="typeFilter" class="w-24 px-2 py-2.5 border-none bg-white shadow-sm rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-400 text-slate-600">
+                    <option value="all">全部</option>
+                    <option value="專案">專案</option>
+                    <option value="特選">特選</option>
+                </select>
+            </div>
+
+            <!-- 基金列表 (改為手機卡片式) -->
+            <div id="fundListContainer" class="space-y-3 pb-4">
+                <!-- JS動態渲染卡片 -->
+            </div>
+        </div>
+
+        <!-- ================= 頁面 2：職級最大化攻略 ================= -->
+        <div id="view-strategyMax" class="space-y-4 hidden animate-fade-in">
+            <div class="bg-gradient-to-br from-yellow-50 to-orange-50 p-4 rounded-xl shadow-sm border border-yellow-100">
+                <h2 class="text-lg font-black text-slate-800 mb-1">🎯 獎勵最大化 Combo</h2>
+                <p class="text-xs text-slate-500">點擊您的職級查看 3 步驟制霸攻略。</p>
+            </div>
+
+            <!-- 手風琴式攻略清單 -->
+            <div class="space-y-3">
+                <!-- RM -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button onclick="toggleAccordion('acc-rm')" class="w-full p-4 text-left flex justify-between items-center active:bg-slate-50">
+                        <div class="font-bold text-blue-800 flex items-center gap-2"><i class="fas fa-user-tie text-blue-500"></i> 理財專員 (RM)</div>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform" id="icon-rm"></i>
+                    </button>
+                    <div id="acc-rm" class="hidden px-4 pb-4 space-y-3 bg-slate-50 border-t border-slate-100 pt-3">
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-blue-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 1. 高權重基底</div>
+                            <div class="font-bold text-slate-700">主攻「專案基金」+ 鎖定「全新戶」</div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-purple-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 2. 現金大賞</div>
+                            <div class="font-bold text-slate-700">達成「爭霸賽」200% (最高拿 <span class="text-red-500">$19,000</span>)</div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-orange-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 3. 外部豪禮疊加</div>
+                            <div class="font-bold text-slate-700">大單直攻基金公司加碼 (如: Sony耳機、威斯汀住宿)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AD/BM -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button onclick="toggleAccordion('acc-mgr')" class="w-full p-4 text-left flex justify-between items-center active:bg-slate-50">
+                        <div class="font-bold text-purple-800 flex items-center gap-2"><i class="fas fa-chess-king text-purple-500"></i> 區總監/分行經理 (AD/BM)</div>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform" id="icon-mgr"></i>
+                    </button>
+                    <div id="acc-mgr" class="hidden px-4 pb-4 space-y-3 bg-slate-50 border-t border-slate-100 pt-3">
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-purple-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 1. 達標群英會門檻</div>
+                            <div class="font-bold text-slate-700">團隊新資金與銷量皆達 100%</div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-red-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 2. 專案全壘打</div>
+                            <div class="font-bold text-slate-700">專案銷量達標 (遠百券最高 <span class="text-red-500">$4,500</span>)</div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-green-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 3. 倍數加乘</div>
+                            <div class="font-bold text-slate-700">善用行外新資金 1.1 倍加權</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 組長 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button onclick="toggleAccordion('acc-lead')" class="w-full p-4 text-left flex justify-between items-center active:bg-slate-50">
+                        <div class="font-bold text-emerald-800 flex items-center gap-2"><i class="fas fa-flag text-emerald-500"></i> 各類業務組長</div>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform" id="icon-lead"></i>
+                    </button>
+                    <div id="acc-lead" class="hidden px-4 pb-4 space-y-3 bg-slate-50 border-t border-slate-100 pt-3">
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-emerald-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 1. 聚焦定額 (RSP)</div>
+                            <div class="font-bold text-slate-700">轄下專員 RSP 新申購達 100%</div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-blue-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 2. 領導加碼券</div>
+                            <div class="font-bold text-slate-700">最高可獲遠百券 <span class="text-red-500">$3,000</span></div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-yellow-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 3. 團隊限時考照</div>
+                            <div class="font-bold text-slate-700">推動組員搶下前5名考照登錄 <span class="text-red-500">$1,000</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 專員 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <button onclick="toggleAccordion('acc-spec')" class="w-full p-4 text-left flex justify-between items-center active:bg-slate-50">
+                        <div class="font-bold text-orange-800 flex items-center gap-2"><i class="fas fa-headset text-orange-500"></i> 各類業務專員</div>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform" id="icon-spec"></i>
+                    </button>
+                    <div id="acc-spec" class="hidden px-4 pb-4 space-y-3 bg-slate-50 border-t border-slate-100 pt-3">
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-orange-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 1. 限時考照</div>
+                            <div class="font-bold text-slate-700">搶先報名登錄拿現金 <span class="text-red-500">$1,000</span></div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-emerald-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 2. RSP 戶數達標</div>
+                            <div class="font-bold text-slate-700">達成季新戶與AUM門檻 (最高 <span class="text-red-500">$2,000</span> 券)</div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm border-l-4 border-slate-400 text-xs">
+                            <div class="font-bold text-slate-400 mb-1">STEP 3. 庫存保衛戰</div>
+                            <div class="font-bold text-slate-700">維持6/30 AUM水位優先比序獲獎</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 頁面 3：門檻缺額試算 ================= -->
+        <div id="view-calculator" class="space-y-4 hidden animate-fade-in">
+            
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">1. 選擇職級身分</label>
+                    <select id="calcMode" onchange="updateCalcMode()" class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:border-indigo-400">
+                        <option value="role_1">AD (團隊達成率%)</option>
+                        <option value="role_2">ASM (團隊達成率%)</option>
+                        <option value="role_3">BM (團隊達成率%)</option>
+                        <option value="role_4">STH (團隊達成率%)</option>
+                        <option value="role_5" selected>理專 RM (單筆銷量萬)</option>
+                        <option value="role_6">金服/房貸組長 (團隊達成率%)</option>
+                        <option value="role_7">電銷/多元組長 (團隊達成率%)</option>
+                        <option value="role_8">金服/房貸專員 (RSP戶數)</option>
+                        <option value="role_9">電銷/多元專員 (RSP戶數)</option>
+                    </select>
+                </div>
+                
+                <div id="rmCampaignContainer" class="hidden">
+                    <label class="block text-xs font-bold text-indigo-500 mb-1">2. 選擇專案活動 (RM限定)</label>
+                    <select id="rmCampaign" onchange="updateRMPrompt(); updateCalculator();" class="w-full p-3 rounded-lg bg-indigo-50 border border-indigo-200 text-sm font-bold text-indigo-800 outline-none focus:border-indigo-400">
+                        <option value="role_5_ab">聯博 (耳機)</option>
+                        <option value="role_5_fs">富盛 (教育訓練)</option>
+                        <option value="role_5_franklin">富蘭克林 (住宿/餐會)</option>
+                        <option value="role_5_pinebridge">柏瑞 (住宿/按摩枕)</option>
+                        <option value="role_5_manulife">宏利/安本 (李白白/喇叭)</option>
+                        <option value="role_5_nomura">野村/高盛 (教育訓練)</option>
+                        <option value="role_5_uob">大華銀 (清淨機)</option>
+                        <option value="role_5_first">第一金 (電動牙刷)</option>
+                        <option value="role_5_invesco">景順 (餐具保溫袋)</option>
+                        <option value="role_5_amundi">東方匯理 (香檳)</option>
+                        <option value="role_5_fidelity">富達 (頸枕眼罩)</option>
+                        <option value="role_5_ctbc">中信 (旅行袋/餐會)</option>
+                        <option value="role_5_bnp">法巴 (午餐公事袋)</option>
+                        <option value="role_5_general">👑 菁英爭霸賽 (總銷量)</option>
+                    </select>
+                </div>
+
+                <div class="relative pt-2">
+                    <input type="number" id="calcInput" oninput="updateCalculator()" placeholder="輸入金額..." 
+                           class="w-full text-center text-3xl font-black text-slate-800 py-4 bg-rose-50 border border-rose-200 rounded-xl focus:border-rose-400 outline-none transition">
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold text-rose-300 pt-2" id="calcUnit">萬</div>
+                </div>
+            </div>
+
+            <!-- 空狀態 -->
+            <div id="calcEmptyState" class="text-center py-10 text-slate-400">
+                <i class="fas fa-hand-pointer text-3xl mb-2 opacity-50"></i>
+                <p class="text-sm">輸入進度即可試算門檻</p>
+            </div>
+
+            <!-- 結果區 -->
+            <div id="calcResults" class="hidden space-y-4">
+                
+                <!-- 下一目標 -->
+                <div class="bg-gradient-to-b from-rose-50 to-white border border-rose-100 rounded-xl p-5 text-center shadow-sm relative overflow-hidden">
+                    <div class="text-xs font-bold text-rose-800 mb-1">距離下一個解鎖門檻</div>
+                    <div class="text-4xl font-black text-rose-600 mb-1" id="shortfallAmount">差 0</div>
+                    <div class="text-sm font-bold text-slate-700" id="nextRewardName">目標：---</div>
+                    
+                    <div id="latestAchievement" class="mt-3"></div>
+
+                    <!-- 進度條 -->
+                    <div class="mt-4 max-w-xl mx-auto">
+                        <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+                            <span id="currentProgressText">目前: 0</span>
+                            <span id="targetProgressText">目標: 0</span>
+                        </div>
+                        <div class="h-3 w-full bg-slate-100 rounded-full overflow-hidden inset-shadow">
+                            <div id="progressBar" class="h-full bg-rose-500 progress-bar-striped transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 已解鎖 -->
+                <div class="border border-green-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                    <div class="bg-green-50 px-3 py-2 border-b border-green-100 flex items-center justify-between">
+                        <div class="font-bold text-green-800 text-sm"><i class="fas fa-check-circle"></i> 已解鎖清單</div>
+                        <span id="achievedCount" class="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div class="p-3 space-y-2 max-h-60 overflow-y-auto" id="achievedList"></div>
+                </div>
+
+                <!-- 未來目標 -->
+                <div class="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden mb-8">
+                    <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 font-bold text-slate-700 text-sm">
+                        <i class="fas fa-lock text-slate-400"></i> 後續更高門檻
+                    </div>
+                    <div class="p-3 space-y-2 max-h-60 overflow-y-auto" id="upcomingList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部導覽列 (App 原生感) -->
+    <nav class="bg-white border-t border-slate-200 flex justify-around items-center pb-safe absolute bottom-0 w-full z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.03)]">
+        <button onclick="switchTab('fundQuery')" id="nav-fundQuery" class="flex-1 py-2.5 flex flex-col items-center gap-1 nav-item nav-active active-scale">
+            <i class="fas fa-search-dollar text-xl"></i>
+            <span class="text-[10px] font-bold">查詢專案</span>
+        </button>
+        <button onclick="switchTab('strategyMax')" id="nav-strategyMax" class="flex-1 py-2.5 flex flex-col items-center gap-1 nav-item active-scale">
+            <i class="fas fa-chess-knight text-xl"></i>
+            <span class="text-[10px] font-bold">攻略</span>
+        </button>
+        <button onclick="switchTab('calculator')" id="nav-calculator" class="flex-1 py-2.5 flex flex-col items-center gap-1 nav-item active-scale">
+            <i class="fas fa-calculator text-xl"></i>
+            <span class="text-[10px] font-bold">缺額試算</span>
+        </button>
+    </nav>
+
+</div>
+
+<!-- 安裝 App 說明 Modal -->
+<div id="installModal" class="fixed inset-0 bg-black/60 hidden z-[100] flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in">
+        <div class="p-5 border-b flex justify-between items-center bg-indigo-50">
+            <h3 class="font-bold text-indigo-900 text-lg flex items-center gap-2"><i class="fas fa-mobile-alt"></i> 安裝至桌面</h3>
+            <button onclick="closeInstallModal()" class="text-slate-400 hover:text-slate-600 text-xl"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-6 space-y-5">
+            <p class="text-sm text-slate-600 leading-relaxed">將此 App 加入手機主畫面，隨時隨地一鍵開啟業績戰略版！</p>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fab fa-apple text-xl"></i> iOS (Safari)</div>
+                <div class="text-xs text-slate-600 space-y-2">
+                    <p>1. 點擊瀏覽器下方正中央的 <b>分享圖示</b> <i class="fas fa-share-square border rounded p-1"></i></p>
+                    <p>2. 下滑選單，選擇 <b>「加入主畫面」</b> <i class="fas fa-plus-square border rounded p-1"></i></p>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fab fa-android text-green-500 text-xl"></i> Android (Chrome)</div>
+                <div class="text-xs text-slate-600 space-y-2">
+                    <p>1. 點擊瀏覽器右上角的 <b>選單圖示</b> <i class="fas fa-ellipsis-v border rounded px-2 py-1"></i></p>
+                    <p>2. 選擇 <b>「加到主畫面」</b> 或 <b>「安裝應用程式」</b></p>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 bg-slate-50">
+            <button onclick="closeInstallModal()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold active-scale">我知道了</button>
+        </div>
+    </div>
+</div>
+
+<!-- 獎勵詳情 Modal (共用) -->
+<div id="rewardModal" class="fixed inset-0 bg-black/60 hidden z-[70] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[85vh] animate-fade-in">
+        <div id="modalHeader" class="p-4 text-white font-bold flex justify-between items-center shrink-0">
+            <span>標的明細</span>
+            <button onclick="closeRewardModal()"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        <div class="p-5 overflow-y-auto no-scrollbar flex-1 bg-slate-50" id="modalContent">
+            <!-- JS Inject -->
+        </div>
+        <div class="p-4 bg-white border-t shrink-0">
+            <button onclick="closeRewardModal()" class="w-full py-2.5 border border-slate-300 text-slate-700 rounded-xl font-bold active-scale">關閉</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 每日激勵金句庫 (100句) ---
+    const motivationalQuotes = [
+        "「不要等待機會，而要創造機會。」—— 在變局中主動出擊，你就是團隊的MVP。",
+        "「成功不是將來才有的，而是從決定去做的那一刻起，持續累積而成。」",
+        "「最困難的時候，往往是離成功最近的時候。堅持下去，突破你的業績天花板！」",
+        "「在局勢多變的時代，堅守紀律與崗位，每天進步1%，年底就能帶來驚人的複利效應。」",
+        "「真正的領導力與業績，來自於你能為客戶創造多少無可取代的價值。」",
+        "「不要怕目標訂得太高，每一次的勇敢跨越，都是在重塑你的人生格局。」",
+        "「業績掛蛋不可怕，可怕的是失去追求卓越的野心。換個腦袋，主動創造你的價值。」",
+        "「今天的每一次拜訪，都是明天成交的種子。」",
+        "「專業帶來信任，信任帶來業績。」",
+        "「沒有賣不出去的商品，只有不夠了解客戶的業務。」",
+        "「拒絕是了解客戶真實需求的開始，不要害怕聽到不。」",
+        "「把客戶的目標當作自己的目標，業績自然會隨之而來。」",
+        "「成功不是終點，失敗也並非末日，最重要的是繼續前進的勇氣。」",
+        "「行動是治癒恐懼的良藥，猶豫只會不斷滋生恐懼。」",
+        "「別對困難妥協，你比想像中的自己更強大。」",
+        "「業績是走出來的，不是等出來的。」",
+        "「每一個微小的進步，都是通往巨大成功的墊腳石。」",
+        "「熱情是會傳染的，用你的專業與熱忱去感動每一位客戶。」",
+        "「沒有奇蹟，只有累積。每天多打一通電話，多見一個客戶。」",
+        "「將專注力放在你能控制的事情上——你的努力與態度。」",
+        "「態度決定高度，格局決定結局。」",
+        "「最好的服務不是達成期待，而是超越期待。」",
+        "「優秀的理專不只看數字，更看見數字背後客戶的人生。」",
+        "「與其抱怨環境，不如成為改變環境的那個人。」",
+        "「昨天的成就屬於昨天，今天的汗水決定明天的輝煌。」",
+        "「挫折是包裝過的禮物，打開它，你會獲得成長。」",
+        "「當你真心渴望某件事，全宇宙都會聯合起來幫你。」",
+        "「不要只為了成交而銷售，要為了創造價值而銷售。」",
+        "「傾聽是最好的溝通，了解客戶才能精準推薦。」",
+        "「機會永遠留給準備好，且敢於行動的人。」",
+        "「堅持做對的事，時間會給你最豐厚的回報。」",
+        "「困難是篩選器，它會把不夠堅定的人淘汰，留下真正的贏家。」",
+        "「用最真誠的心，做最專業的事。」",
+        "「不怕千萬人阻擋，只怕自己投降。」",
+        "「別讓昨天的失敗，佔用今天的時間。」",
+        "「每一次的接觸，都是建立個人品牌的關鍵時刻。」",
+        "「沒有所謂的運氣，只有在看不見的地方默默努力。」",
+        "「你的價值，由你為別人解決多少問題來決定。」",
+        "「把細節做到極致，就是專業。」",
+        "「不要給自己設限，你的潛力遠大於你的想像。」",
+        "「學習是最好的投資，專業是最好的武器。」",
+        "「與其追求一時的業績，不如追求一世的信任。」",
+        "「在別人放棄的地方堅持下去，你就能看見不同的風景。」",
+        "「成交只是服務的開始，口碑才是永續的財富。」",
+        "「設定明確的目標，然後不顧一切地去實現它。」",
+        "「熱愛你的工作，它就會用最好的結果回報你。」",
+        "「微笑是你最好的名片，專業是你最強的後盾。」",
+        "「每一次的挑戰，都是升級自己能力的機會。」",
+        "「別總想著捷徑，踏實走好每一步，才是最快的路。」",
+        "「專注於客戶的利益，你的利益自然會被照顧。」",
+        "「今天不走，明天就要跑。現在就開始行動！」",
+        "「把複雜的金融商品說得簡單易懂，這就是你的功力。」",
+        "「不要害怕競爭，它會逼迫你變得更優秀。」",
+        "「真正的強者，不是沒有眼淚，而是含著眼淚繼續奔跑。」",
+        "「用業績證明實力，用服務贏得人心。」",
+        "「每天比別人多做一點點，長期下來就是巨大的差距。」",
+        "「信任就像一張紙，皺了就無法撫平。請珍惜客戶的信任。」",
+        "「失敗只是暫時的停止，放棄才是真正的失敗。」",
+        "「把客戶的抱怨當作改進的契機，這是無價的反饋。」",
+        "「不要只看眼前的利益，要看長遠的價值。」",
+        "「你的態度，決定了客戶對你的信任度。」",
+        "「成功是一場馬拉松，而不是百米衝刺。保持節奏，堅持到底。」",
+        "「在壓力下保持冷靜，在變局中尋找機會。」",
+        "「每一次的進步都值得慶祝，繼續保持向上的動力。」",
+        "「永遠保持好奇心，不斷學習新的金融知識。」",
+        "「做一個能解決問題的人，而不是製造問題的人。」",
+        "「你的專業度，是你最好的銷售利器。」",
+        "「不要把失敗歸咎於別人，從自己身上找原因才能進步。」",
+        "「對待每一位客戶都要像對待VIP一樣用心。」",
+        "「沒有理所當然的成交，只有不斷努力的結果。」",
+        "「把客戶當作朋友，而不只是客戶。」",
+        "「在困難面前不低頭，在挑戰面前不退縮。」",
+        "「用積極的心態面對每一天，好運自然會跟著你。」",
+        "「專業的理專，懂得在風險與報酬之間找到最佳平衡點。」",
+        "「你的耐心與細心，客戶都看在眼裡。」",
+        "「不要停止進步，因為市場永遠在變。」",
+        "「每一次的成交，都是對你專業的肯定。」",
+        "「把每一次的拜訪，都當作是一次學習的機會。」",
+        "「在平凡的工作中，創造不平凡的價值。」",
+        "「用你的熱忱，點燃客戶的投資熱情。」",
+        "「成功往往隱藏在再堅持一下的努力之中。」",
+        "「不要因為一次的失敗，就否定自己的能力。」",
+        "「做一個值得客戶託付的人。」",
+        "「你的專業建議，可能改變客戶的一生。」",
+        "「始終保持謙卑學習的心態。」",
+        "「用最嚴謹的態度，處理客戶的每一分錢。」",
+        "「在瞬息萬變的市場中，保持清醒的頭腦。」",
+        "「每一次的危機，都伴隨著轉機。」",
+        "「不要只做一個推銷員，要做一個財務顧問。」",
+        "「用你的專業，為客戶的財富保駕護航。」",
+        "「客戶的滿意，是你最大的成就感。」",
+        "「不怕起步晚，只怕不開始。」",
+        "「把困難當作墊腳石，一步步往上爬。」",
+        "「用你的堅持，換取最終的勝利。」",
+        "「在追求業績的同時，不要忘記服務的初衷。」",
+        "「做一個充滿正能量的人，感染身邊的每一個人。」",
+        "「每一次的拒絕，都讓你更接近下一次的成交。」",
+        "「用專業贏得尊重，用服務創造價值。」",
+        "「相信自己，你一定能達成目標！」",
+        "「今天又是充滿希望的一天，出發吧，去創造屬於你的奇蹟！」"
+    ];
+
+    // 隨機挑選一句並顯示
+    function loadDailyQuote() {
+        const quoteElement = document.getElementById('dailyQuoteDisplay');
+        const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+        quoteElement.innerText = motivationalQuotes[randomIndex];
+    }
+
+    // --- 手機版底部導覽列切換 ---
+    function switchTab(tabId) {
+        // 重置 Nav
+        ['fundQuery', 'strategyMax', 'calculator'].forEach(id => {
+            const btn = document.getElementById(`nav-${id}`);
+            btn.classList.remove('nav-active');
+            btn.classList.add('text-slate-400');
+            document.getElementById(`view-${id}`).classList.add('hidden');
+        });
+        // 啟動目標
+        const activeBtn = document.getElementById(`nav-${tabId}`);
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('nav-active');
+        document.getElementById(`view-${tabId}`).classList.remove('hidden');
+    }
+
+    // --- 手風琴切換 ---
+    function toggleAccordion(id) {
+        const el = document.getElementById(id);
+        const icon = document.getElementById(id.replace('acc-', 'icon-'));
+        if (el.classList.contains('hidden')) {
+            el.classList.remove('hidden');
+            icon.classList.add('rotate-180');
+        } else {
+            el.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+        }
+    }
+
+    // --- 安裝 Modal ---
+    function showInstallModal() { document.getElementById('installModal').classList.remove('hidden'); }
+    function closeInstallModal() { document.getElementById('installModal').classList.add('hidden'); }
+
+    // --- 基金資料庫 ---
+    const fundData = [
+        { type: '專案', company: '聯博投信', categoryName: '聯博 Q2 專案', month: '0.08~0.25%', quarter: '0.32~1.00%', prize: '滿500萬送 Sony耳罩式耳機 (前40名)', color: 'bg-blue-600', targets: [{ name: '全球非投資等級債', code: 'ACAN', month: '0.15%', quarter: '0.60%' }, { name: '亞洲股票基金', code: 'AC', month: '0.08%', quarter: '0.32%' }, { name: '國際科技基金', code: 'DI', month: '0.25%', quarter: '1.00%' }] },
+        { type: '專案', company: '富盛投顧', categoryName: '安盛 & M&G 專案', month: '0.08~0.25%', quarter: '0.32~1.00%', prize: '滿2,000萬享兩天一夜教育訓練', color: 'bg-rose-500', targets: [{ name: '安盛美國非投等債', code: 'UX', month: '0.25%', quarter: '1.00%' }] },
+        { type: '專案', company: '富蘭克林', categoryName: '華美/美盛 專案', month: '0.08~0.25%', quarter: '0.32~1.00%', prize: '滿1000萬送鹿港永樂酒店', color: 'bg-emerald-600', targets: [{ name: '華美AI新科技', code: 'AX', month: '0.20%', quarter: '0.80%' }] },
+        { type: '專案', company: '柏瑞投信', categoryName: '柏瑞多重資產', month: '0.08~0.20%', quarter: '0.32~0.80%', prize: '滿800萬送大溪威斯汀住宿', color: 'bg-amber-600', targets: [{ name: 'ESG量化多重資產', code: 'PB', month: '0.20%', quarter: '0.80%' }] },
+        { type: '專案', company: '宏利投信', categoryName: '宏利與安本', month: '0.08~0.20%', quarter: '0.32~0.80%', prize: '滿500萬享李白白餐會', color: 'bg-orange-500', targets: [{ name: '安本亞洲小型公司', code: 'AE', month: '0.20%', quarter: '0.80%' }] },
+        { type: '特選', company: '野村投信', categoryName: '野村特選/高盛', month: '0.08~0.15%', quarter: '0.24~0.45%', prize: '滿1200萬享兩天一夜教育訓練', color: 'bg-indigo-500', targets: [{ name: '駿利亨德森平衡', code: 'JS/UH', month: '0.15%', quarter: '0.45%' }] },
+        { type: '特選', company: '東方匯理', categoryName: '東方匯理', month: '0.08~0.25%', quarter: '0.24~0.75%', prize: '滿150萬送 Moët 香檳', color: 'bg-purple-600', targets: [{ name: '策略收益債券', code: 'AM/UM', month: '0.25%', quarter: '0.75%' }] }
+    ];
+
+    const thresholdsData = {
+        role_1: [ { amount: 100, reward: '🏆 群英會資格 + 專案全壘打(遠百券最高$4,500)', condition: '區域當季「新資金、總銷、專案銷量」皆達100%' }, { amount: 120, reward: '🔥 團隊超標衝刺', condition: '爭取群英會全行排名' } ],
+        role_2: [ { amount: 60, reward: '✅ ASM專案基金達標 (遠百券 $3,000)', condition: '轄下專案達成60%' }, { amount: 100, reward: '🔥 團隊滿貫達成', condition: '帶動全行排名' } ],
+        role_3: [ { amount: 100, reward: '🏆 群英會資格 + 專案全壘打(最高$4,500)', condition: '分行當季「新資金、總銷、專案」皆達100%' }, { amount: 120, reward: '🔥 團隊超標衝刺', condition: '爭取全行排名' } ],
+        role_4: [ { amount: 70, reward: '✅ STH 轄下理專達標 (遠百券 $1,500)', condition: '轄下專案達成70%' }, { amount: 100, reward: '🔥 團隊滿貫達成', condition: '協助分行衝刺' } ],
+        role_5_ab: [ { amount: 500, reward: 'Sony 耳機', condition: '銷量達500萬(限40名)' } ],
+        role_5_fs: [ { amount: 2000, reward: '兩天一夜教育訓練', condition: '銷量達2000萬(限20名)' } ],
+        role_5_franklin: [ { amount: 400, reward: '教育訓練餐會', condition: '銷量達400萬' }, { amount: 1000, reward: '鹿港永樂酒店', condition: '銷量達1000萬' } ],
+        role_5_pinebridge: [ { amount: 100, reward: '保溫瓶', condition: '達100萬' }, { amount: 300, reward: '按摩枕', condition: '達300萬' }, { amount: 800, reward: '威斯汀住宿', condition: '達800萬' } ],
+        role_5_manulife: [ { amount: 50, reward: '野餐墊', condition: '達50萬' }, { amount: 300, reward: '藍芽喇叭', condition: '達300萬' }, { amount: 500, reward: '李白白餐會', condition: '達500萬' } ],
+        role_5_nomura: [ { amount: 1200, reward: '兩天一夜教育訓練', condition: '達1200萬' } ],
+        role_5_uob: [ { amount: 120, reward: '空氣清淨機', condition: '達120萬' } ],
+        role_5_invesco: [ { amount: 100, reward: '高檔餐具+保溫袋', condition: '達100萬' } ],
+        role_5_amundi: [ { amount: 150, reward: 'Moët 香檳', condition: '達150萬(週30名)' } ],
+        role_5_fidelity: [ { amount: 200, reward: 'OSIM美眼舒+頸枕', condition: '達200萬' } ],
+        role_5_first: [ { amount: 300, reward: '電動牙刷', condition: '達300萬' }, { amount: 800, reward: '餐會', condition: '達800萬' } ],
+        role_5_ctbc: [ { amount: 100, reward: '旅行袋', condition: '達100萬' }, { amount: 300, reward: '餐會', condition: '達300萬' } ],
+        role_5_bnp: [ { amount: 150, reward: '午餐袋+公事袋', condition: '達150萬' } ],
+        role_5_general: [ { amount: 6000, reward: '🏆 最高現金 ($19,000)', condition: '總業績達200%' } ],
+        role_6: [ { amount: 100, reward: '✅ 金服/房貸組長 RSP 門檻 ($3,000)', condition: '轄下RSP新戶達100%' } ],
+        role_7: [ { amount: 100, reward: '✅ 電銷/多元組長 RSP 門檻 ($2,500)', condition: '轄下RSP新戶達100%' } ],
+        role_8: [ { amount: 10, reward: '✅ 金服/房貸專員 RSP 門檻 ($2,000)', condition: '新戶達10戶+AUM門檻' } ],
+        role_9: [ { amount: 3, reward: '✅ 電銷/多元專員 RSP 門檻 ($1,500)', condition: '新戶達3戶+AUM門檻' } ]
+    };
+
+    // --- 渲染卡片列表 (App版) ---
+    const listContainer = document.getElementById('fundListContainer');
+    const searchInput = document.getElementById('searchInput');
+    const typeFilter = document.getElementById('typeFilter');
+
+    function renderTable() {
+        const term = searchInput.value.toLowerCase();
+        const fType = typeFilter.value;
+        listContainer.innerHTML = '';
+        
+        const filtered = fundData.filter(item => {
+            const tMatch = item.targets.some(t => t.name.toLowerCase().includes(term) || t.code.toLowerCase().includes(term));
+            const baseMatch = item.categoryName.toLowerCase().includes(term) || item.company.toLowerCase().includes(term) || tMatch;
+            return (fType === 'all' || item.type === fType) && baseMatch;
+        });
+
+        filtered.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-xl shadow-sm border border-slate-100 p-4 active-scale transition-transform';
+            div.onclick = () => showReward(index, filtered);
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-1.5">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.type === '專案' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600'}">${item.type}</span>
+                    <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full"><i class="fas fa-gift"></i> 看獎勵</span>
+                </div>
+                <h3 class="font-bold text-slate-800 text-sm leading-tight">${item.categoryName} <span class="text-xs font-normal text-slate-400">(${item.company})</span></h3>
+                <div class="flex gap-2 mt-3 text-center">
+                    <div class="flex-1 bg-indigo-50 rounded-lg py-1 border border-indigo-50">
+                        <div class="text-[10px] text-indigo-400 font-bold mb-0.5">月加碼</div>
+                        <div class="font-bold text-indigo-700 text-xs">${item.month}</div>
+                    </div>
+                    <div class="flex-1 bg-indigo-600 rounded-lg py-1 shadow-sm">
+                        <div class="text-[10px] text-indigo-200 font-bold mb-0.5">季加碼</div>
+                        <div class="font-black text-white text-xs">${item.quarter}</div>
+                    </div>
+                </div>
+            `;
+            listContainer.appendChild(div);
+        });
+    }
+
+    // --- Modal ---
+    function showReward(index, dataArray) {
+        const item = dataArray[index];
+        document.getElementById('modalHeader').className = `p-4 text-white font-bold flex justify-between items-center shrink-0 ${item.color}`;
+        
+        let targetsHtml = item.targets.map(t => `
+            <div class="bg-white p-3 rounded-lg border border-slate-100 shadow-sm flex flex-col gap-1">
+                <div class="font-bold text-slate-700 text-sm">${t.name}</div>
+                <div class="text-xs font-mono text-slate-400 mb-1">代碼: ${t.code}</div>
+                <div class="flex gap-2 text-xs">
+                    <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold">月: ${t.month}</span>
+                    <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-black">季: ${t.quarter}</span>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('modalContent').innerHTML = `
+            <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 mb-4 shadow-sm relative overflow-hidden">
+                <div class="absolute -right-2 -top-2 opacity-20"><i class="fas fa-gift text-5xl text-orange-400"></i></div>
+                <div class="font-bold text-orange-800 text-xs mb-1 relative z-10"><i class="fas fa-trophy"></i> 專屬加碼禮</div>
+                <div class="text-slate-700 text-sm font-bold relative z-10">${item.prize}</div>
+            </div>
+            <h4 class="font-bold text-slate-600 text-xs mb-2 pl-1"><i class="fas fa-list"></i> 適用標的費率</h4>
+            <div class="space-y-2">${targetsHtml}</div>
+        `;
+        document.getElementById('rewardModal').classList.remove('hidden');
+    }
+    function closeRewardModal() { document.getElementById('rewardModal').classList.add('hidden'); }
+
+    // --- 試算器邏輯 ---
+    function updateCalcMode() {
+        const mode = document.getElementById('calcMode').value;
+        const rmContainer = document.getElementById('rmCampaignContainer');
+        const unitEl = document.getElementById('calcUnit');
+        const inputEl = document.getElementById('calcInput');
+        
+        if (mode === 'role_5') {
+            rmContainer.classList.remove('hidden');
+            unitEl.innerText = '萬';
+            updateRMPrompt();
+        } else {
+            rmContainer.classList.add('hidden');
+            if (['role_1', 'role_2', 'role_3', 'role_4', 'role_6', 'role_7'].includes(mode)) {
+                unitEl.innerText = '%';
+                inputEl.placeholder = "輸入 % (例:100)";
+            } else {
+                unitEl.innerText = '戶';
+                inputEl.placeholder = "戶數 (例:10)";
+            }
+        }
+        document.getElementById('calcInput').value = '';
+        document.getElementById('calcEmptyState').classList.remove('hidden');
+        document.getElementById('calcResults').classList.add('hidden');
+    }
+
+    function updateRMPrompt() {
+        const rmCamp = document.getElementById('rmCampaign');
+        const companyName = rmCamp.options[rmCamp.selectedIndex].text.split(' ')[0];
+        document.getElementById('calcInput').placeholder = `輸入${companyName}銷量`;
+    }
+
+    function updateCalculator() {
+        const baseMode = document.getElementById('calcMode').value;
+        let dataKey = baseMode;
+        let unitText = '萬';
+        
+        if (baseMode === 'role_5') {
+            dataKey = document.getElementById('rmCampaign').value;
+        } else if (['role_1', 'role_2', 'role_3', 'role_4', 'role_6', 'role_7'].includes(baseMode)) {
+            unitText = '%';
+        } else if (['role_8', 'role_9'].includes(baseMode)) {
+            unitText = '戶';
+        }
+        
+        const inputVal = document.getElementById('calcInput').value;
+        const emptyState = document.getElementById('calcEmptyState');
+        const resultsArea = document.getElementById('calcResults');
+        
+        if (!inputVal || inputVal < 0) {
+            emptyState.classList.remove('hidden');
+            resultsArea.classList.add('hidden');
+            return;
+        }
+
+        emptyState.classList.add('hidden');
+        resultsArea.classList.remove('hidden');
+
+        const current = parseFloat(inputVal);
+        const targets = thresholdsData[dataKey];
+        let achieved = [], upcoming = [], nextT = null, prevT = null;
+
+        targets.forEach(t => {
+            if (current >= t.amount) { achieved.push(t); prevT = t; }
+            else { upcoming.push(t); if (!nextT) nextT = t; }
+        });
+
+        document.getElementById('latestAchievement').innerHTML = prevT 
+            ? `<div class="bg-green-100 text-green-800 p-2.5 rounded-lg text-xs text-left shadow-sm border border-green-200">
+                <b><i class="fas fa-gift"></i> 最新:</b> ${prevT.reward}<br>
+                <span class="text-[10px] text-green-600">門檻條件: ${prevT.condition}</span>
+               </div>` : '';
+
+        if (nextT) {
+            document.getElementById('shortfallAmount').innerText = `差 ${(nextT.amount - current).toFixed(1).replace('.0','')} ${unitText}`;
+            document.getElementById('nextRewardName').innerText = `目標: ${nextT.reward}`;
+            let min = prevT ? prevT.amount : 0;
+            let pct = ((current - min) / (nextT.amount - min)) * 100;
+            document.getElementById('progressBar').style.width = `${Math.min(100, pct)}%`;
+            document.getElementById('currentProgressText').innerText = `目前: ${current}`;
+            document.getElementById('targetProgressText').innerText = `目標: ${nextT.amount}`;
+        } else {
+            document.getElementById('shortfallAmount').innerText = `已滿貫`;
+            document.getElementById('nextRewardName').innerText = `達成目前最高門檻`;
+            document.getElementById('progressBar').style.width = `100%`;
+            document.getElementById('currentProgressText').innerText = `目前: ${current}`;
+            document.getElementById('targetProgressText').innerText = `王者`;
+        }
+
+        document.getElementById('achievedCount').innerText = achieved.length;
+        document.getElementById('achievedList').innerHTML = achieved.length ? achieved.reverse().map(t => 
+            `<div class="bg-slate-50 rounded p-2 text-xs border border-slate-100">
+                <span class="font-bold text-green-700 mr-1">[${t.amount}${unitText}]</span> <b>${t.reward}</b>
+                <div class="text-[10px] text-slate-400 mt-0.5">${t.condition}</div>
+            </div>`).join('') : '<div class="text-xs text-slate-400">尚未解鎖</div>';
+
+        document.getElementById('upcomingList').innerHTML = upcoming.length ? upcoming.map(t => 
+            `<div class="bg-white rounded p-2 text-xs border border-slate-100">
+                <span class="font-bold text-rose-500 mr-1">[${t.amount}${unitText}]</span> ${t.reward}
+            </div>`).join('') : '<div class="text-xs text-slate-400">無更高門檻</div>';
+    }
+
+    // --- 啟動初始化 ---
+    document.addEventListener("DOMContentLoaded", () => {
+        loadDailyQuote(); // 載入每日金句
+        searchInput.addEventListener('input', renderTable);
+        typeFilter.addEventListener('change', renderTable);
+        document.getElementById('calcMode').value = 'role_5';
+        updateCalcMode();
+        renderTable();
+    });
+</script>
+</body>
+</html>
