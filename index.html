@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -49,33 +49,38 @@ body { background-color: #cbd5e1; }
 </head>
 <body>
 
-<!-- 登入畫面 -->
+<!-- 登入與入口畫面 -->
 <div id="loginScreen" class="fixed inset-0 bg-indigo-900 z-50 flex flex-col items-center justify-center p-6">
   <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm animate-fade-in">
-    <div class="text-center mb-6">
-        <i class="fas fa-shield-alt text-4xl text-indigo-500 mb-2"></i>
-        <h2 class="text-2xl font-black text-indigo-700">理專戰略 App</h2>
+    <div class="text-center mb-8">
+        <div class="bg-indigo-100 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-inner">
+            <i class="fas fa-rocket text-4xl text-indigo-600"></i>
+        </div>
+        <h2 class="text-2xl font-black text-indigo-800">理專戰略 App</h2>
+        <p class="text-sm text-slate-500 mt-2 font-bold">2026 Q2 業績衝刺儀表板</p>
     </div>
-    <div class="space-y-4">
-      <input type="text" id="username" placeholder="使用者名稱 (限 5~6 碼)" maxlength="6" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none text-lg transition-all">
-      <input type="password" id="password" placeholder="密碼 (未填則預設同帳號)" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none text-lg transition-all">
-      <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition shadow-lg active-scale text-lg">登入系統</button>
-    </div>
-    <div class="mt-5 text-xs text-slate-500 text-center leading-relaxed font-bold">
-        輸入可為任何數字或英文名字<br>
-        <span class="text-slate-400 font-normal">若未填寫密碼，將自動視同帳號登入</span>
-    </div>
-  </div>
-</div>
+    
+    <div class="space-y-4 relative">
+      <!-- 一般使用者：免密碼直接進入按鈕 -->
+      <button id="primaryEntryBtn" onclick="enterSystem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl transition shadow-lg active-scale text-xl flex items-center justify-center gap-2">
+          <i class="fas fa-sign-in-alt"></i> 進入系統
+      </button>
 
-<!-- 管理員統計面板 -->
-<div id="adminPanel" class="fixed inset-0 bg-slate-100 z-50 hidden flex flex-col">
-  <header class="bg-slate-800 text-white p-4 flex justify-between items-center pt-safe">
-    <h1 class="font-bold"><i class="fas fa-user-shield text-yellow-400 mr-2"></i>Tony 管理員後台</h1>
-    <button onclick="logout()" class="text-red-400 font-bold bg-white/10 px-4 py-2 rounded-xl active-scale">登出</button>
-  </header>
-  <div class="p-4 flex-1 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow p-4" id="adminStats"></div>
+      <!-- 管理員入口切換按鈕 -->
+      <div class="text-center mt-4">
+          <button onclick="toggleAdminForm()" class="text-xs font-bold text-slate-400 hover:text-indigo-500 transition px-4 py-2">
+             <i class="fas fa-user-shield"></i> 管理員登入
+          </button>
+      </div>
+
+      <!-- 管理員專屬輸入表單 (預設隱藏) -->
+      <div id="adminForm" class="hidden mt-4 pt-4 border-t border-slate-100 space-y-3 animate-fade-in">
+          <div class="text-sm font-bold text-indigo-800 mb-2"><i class="fas fa-lock mr-1"></i> 後台驗證</div>
+          <input type="text" id="adminUser" placeholder="管理員帳號" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-base transition-all">
+          <input type="password" id="adminPass" placeholder="管理員密碼" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-base transition-all">
+          <button onclick="handleAdminLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition shadow active-scale text-base">確認登入</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -91,7 +96,7 @@ body { background-color: #cbd5e1; }
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <button onclick="logout()" class="text-indigo-200 hover:text-white text-xs mr-2 active-scale p-2"><i class="fas fa-sign-out-alt"></i> 登出</button>
+            <button onclick="logout()" class="text-indigo-200 hover:text-white text-xs mr-2 active-scale p-2"><i class="fas fa-home"></i> 離開</button>
         </div>
     </header>
 
@@ -220,50 +225,38 @@ body { background-color: #cbd5e1; }
                             </div>
                             <div id="mgr-s3" class="hidden bg-green-50 p-4 border-t border-green-100 text-xs">
                                 <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>只要從其他銀行搬新錢過來(新資金)，且淨銷量大於零，團隊這筆業績會以 1.1 倍計算。</p>
-                                <p class="text-green-800 bg-green-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>團隊找客戶從他行匯入 1,000 萬買基金，系統認定為 <b>1,100 萬</b>，讓分行排名大幅躍升。</p>
+                                <p class="text-green-800 bg-green-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>團隊找客戶從他行匯入 1,000 萬買基金，系統認定為 <b>1,100 萬</b>，讓分行排名躍升。</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ASM -->
+                <!-- STH/ASM -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <button onclick="toggleAccordion('acc-asm')" class="w-full p-5 text-left flex justify-between items-center active-scale">
-                        <div class="font-bold text-cyan-800 flex items-center gap-3 text-base"><i class="fas fa-sitemap text-cyan-500 text-lg"></i> 區業務經理 (ASM)</div>
-                        <i class="fas fa-chevron-down text-slate-400 transition-transform" id="icon-asm"></i>
+                    <button onclick="toggleAccordion('acc-sth')" class="w-full p-5 text-left flex justify-between items-center active-scale">
+                        <div class="font-bold text-cyan-800 flex items-center gap-3 text-base"><i class="fas fa-sitemap text-cyan-500 text-lg"></i> 區業務經理/主管 (ASM/STH)</div>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform" id="icon-sth"></i>
                     </button>
-                    <div id="acc-asm" class="hidden px-5 pb-5 space-y-3 bg-slate-50 border-t border-slate-100 pt-4">
+                    <div id="acc-sth" class="hidden px-5 pb-5 space-y-3 bg-slate-50 border-t border-slate-100 pt-4">
                         
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('asm-s1')">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('sth-s1')">
                             <div class="p-4 border-l-4 border-cyan-400 flex justify-between items-center">
-                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 1. 鞏固分行及格率</div><div class="font-bold text-slate-700 text-sm">轄下分行達標家數比率達 60%</div></div>
-                                <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-asm-s1"></i>
+                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 1. 鞏固團隊及格率</div><div class="font-bold text-slate-700 text-sm">轄下專案基金達標 60~70%</div></div>
+                                <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-sth-s1"></i>
                             </div>
-                            <div id="asm-s1" class="hidden bg-cyan-50 p-4 border-t border-cyan-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>ASM 的首要門檻是帶領轄下分行一起及格，只要有六成的分行達成目標，就能拿到基本的競賽門票。</p>
-                                <p class="text-cyan-800 bg-cyan-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>如果區內有 5 家分行，請優先盯緊其中 3 家順利達成銷量 100%，就能先過第一關。</p>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('asm-s2')">
-                            <div class="p-4 border-l-4 border-blue-400 flex justify-between items-center">
-                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 2. 爭取個人獎勵</div><div class="font-bold text-slate-700 text-sm">專案銷量總金額排名前 1 名</div></div>
-                                <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-asm-s2"></i>
-                            </div>
-                            <div id="asm-s2" class="hidden bg-blue-50 p-4 border-t border-blue-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>當分行及格率達標後，接著比拚的是整個區域的總銷量，只要衝到第一名，就能拿到專屬的遠百券。</p>
-                                <p class="text-blue-800 bg-blue-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>協調大單集中在加碼專案上，區域總銷量全行第一，ASM 直接領走 <b>$3,000 遠百商品券</b>。</p>
+                            <div id="sth-s1" class="hidden bg-cyan-50 p-4 border-t border-cyan-100 text-xs">
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>ASM的首要門檻是專案達成60%，STH為70%，達標即可獲取遠百商品券。</p>
+                                <p class="text-cyan-800 bg-cyan-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>協助落後分行推廣專案基金，順利達標即可獲得 <b>1,500 ~ 3,000 券</b>。</p>
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('asm-s3')">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('sth-s2')">
                             <div class="p-4 border-l-4 border-yellow-400 flex justify-between items-center">
-                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 3. 拉高平均達成率</div><div class="font-bold text-slate-700 text-sm">爭取群英會資格排名</div></div>
-                                <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-asm-s3"></i>
+                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 2. 爭取最高榮譽</div><div class="font-bold text-slate-700 text-sm">爭取群英會資格排名</div></div>
+                                <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-sth-s2"></i>
                             </div>
-                            <div id="asm-s3" class="hidden bg-yellow-50 p-4 border-t border-yellow-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>系統還會看「平均達成率」。幫達成率落後的分行補足業績，拉高整體平均，就能爭取最高榮譽群英會。</p>
-                                <p class="text-yellow-800 bg-yellow-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>發現某家分行達成率僅 50%，親自去督導並協助大單拉到 100%，整個區域的平均分數就會大躍進！</p>
+                            <div id="sth-s2" class="hidden bg-yellow-50 p-4 border-t border-yellow-100 text-xs">
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>系統會看「銷量總金額」進行全行排名，只要衝到第1名，就能獲得群英會門票。</p>
                             </div>
                         </div>
                     </div>
@@ -283,17 +276,17 @@ body { background-color: #cbd5e1; }
                             </div>
                             <div id="fss-s1" class="hidden bg-emerald-50 p-4 border-t border-emerald-100 text-xs">
                                 <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>每日緊盯團隊進度，確保底下的專員在「RSP新戶數」與「AUM」都達到100%門檻。</p>
-                                <p class="text-emerald-800 bg-emerald-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>規定組員每天早上回報約訪名單，協助組員談單，全組達標過第一關。</p>
+                                <p class="text-emerald-800 bg-emerald-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>規定組員每天早上回報約訪名單，全組達標過第一關。</p>
                             </div>
                         </div>
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('fss-s2')">
                             <div class="p-4 border-l-4 border-blue-400 flex justify-between items-center">
-                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 2. 爭取組長加碼</div><div class="font-bold text-slate-700 text-sm">最高可獲遠百券 <span class="text-red-500">$3,000</span></div></div>
+                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 2. 爭取組長加碼</div><div class="font-bold text-slate-700 text-sm">排名前6可獲遠百券 <span class="text-red-500">$3,000</span></div></div>
                                 <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-fss-s2"></i>
                             </div>
                             <div id="fss-s2" class="hidden bg-blue-50 p-4 border-t border-blue-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>只要成功輔導團隊達標，身為組長就能獲得專屬的領導加碼獎勵。</p>
-                                <p class="text-blue-800 bg-blue-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>全組順利完成 100% 達成率，組長直接獲頒 <b>$3,000 遠百商品券</b> 獎勵。</p>
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>成功輔導團隊達標後，將進行戶數達成率排序，全國前6名的組長即享領導加碼。</p>
+                                <p class="text-blue-800 bg-blue-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>全組順利達成率超標並進入前6，組長直接獲頒 <b>$3,000 遠百商品券</b>。</p>
                             </div>
                         </div>
                     </div>
@@ -308,12 +301,11 @@ body { background-color: #cbd5e1; }
                     <div id="acc-mb" class="hidden px-5 pb-5 space-y-3 bg-slate-50 border-t border-slate-100 pt-4">
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('mb-s1')">
                             <div class="p-4 border-l-4 border-orange-400 flex justify-between items-center">
-                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 1. 搶先考照登錄</div><div class="font-bold text-slate-700 text-sm">首5名考照登錄拿 <span class="text-red-500">$1,000</span></div></div>
+                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 1. 搶先考照登錄</div><div class="font-bold text-slate-700 text-sm">首5名考照登錄拿現金 <span class="text-red-500">$1,000</span></div></div>
                                 <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-mb-s1"></i>
                             </div>
                             <div id="mb-s1" class="hidden bg-orange-50 p-4 border-t border-orange-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>趁早去考規定的金融證照，考完立刻登錄，比速度的！</p>
-                                <p class="text-orange-800 bg-orange-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>馬上考到信託+投信法規，登錄系統搶前5名，拿 <b>1,000元現金</b>。</p>
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>趁早在4~6月去考規定的金融證照，考完立刻登錄，搶全行前5名！</p>
                             </div>
                         </div>
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('mb-s2')">
@@ -322,8 +314,7 @@ body { background-color: #cbd5e1; }
                                 <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-mb-s2"></i>
                             </div>
                             <div id="mb-s2" class="hidden bg-emerald-50 p-4 border-t border-emerald-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>找還沒做過定期定額的新客人，請他們設定扣款，戶數跟總資產規模都要到位。</p>
-                                <p class="text-emerald-800 bg-emerald-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>本季成功讓 10 個全新客戶辦理定期定額扣款，且累積資產達 10萬，即可獲得 <b>$2,000 券</b>。</p>
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>找新客人設定扣款，戶數跟總資產規模都要到位。達標後依達成率取前12名領取 <b>$2,000 券</b>。</p>
                             </div>
                         </div>
                     </div>
@@ -338,12 +329,11 @@ body { background-color: #cbd5e1; }
                     <div id="acc-tmmgr" class="hidden px-5 pb-5 space-y-3 bg-slate-50 border-t border-slate-100 pt-4">
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('tmmgr-s1')">
                             <div class="p-4 border-l-4 border-teal-400 flex justify-between items-center">
-                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 1. 督導 RSP 達標</div><div class="font-bold text-slate-700 text-sm">轄下專員 RSP 達 100%</div></div>
+                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 1. 督導 RSP 達標</div><div class="font-bold text-slate-700 text-sm">轄下專員 RSP 達 100% (前5名享$2,500)</div></div>
                                 <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-tmmgr-s1"></i>
                             </div>
                             <div id="tmmgr-s1" class="hidden bg-teal-50 p-4 border-t border-teal-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>確保電銷與多元業務專員，撥打客戶邀約定期定額，整體戶數與AUM達標。</p>
-                                <p class="text-teal-800 bg-teal-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>追蹤每日通話與成交率，帶領全組達到 100% 目標。</p>
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>確保電銷與多元業務專員，撥打客戶邀約定期定額，整體戶數與AUM達標，爭取前5名領取獎勵。</p>
                             </div>
                         </div>
                     </div>
@@ -362,8 +352,8 @@ body { background-color: #cbd5e1; }
                                 <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-tm-s2"></i>
                             </div>
                             <div id="tm-s2" class="hidden bg-emerald-50 p-4 border-t border-emerald-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>門檻比一般專員低！只要找到3個新戶做定期定額，總金額滿1萬元即可！</p>
-                                <p class="text-emerald-800 bg-emerald-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>打電話成功邀請3位薪轉戶設定每月扣款 3,500元，輕鬆達標領 <b>$1,500 券</b>。</p>
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>門檻比一般專員低！只要找到3個新戶做定期定額，總金額滿1萬元即可爭取前10名！</p>
+                                <p class="text-emerald-800 bg-emerald-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>打電話成功邀請3位薪轉戶設定每月扣款 3,500元，輕鬆達標領取 <b>$1,500 券</b>。</p>
                             </div>
                         </div>
                     </div>
@@ -378,10 +368,8 @@ body { background-color: #cbd5e1; }
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2">1. 選擇職級身分</label>
                     <select id="calcMode" onchange="updateCalcMode()" class="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-base font-bold text-slate-700 outline-none focus:border-indigo-400 active-scale">
-                        <option value="role_1">AD (團隊達成率%)</option>
-                        <option value="role_2">ASM (團隊達成率%)</option>
-                        <option value="role_3">BM (團隊達成率%)</option>
-                        <option value="role_4">STH (團隊達成率%)</option>
+                        <option value="role_1">AD/BM (團隊達成率%)</option>
+                        <option value="role_4">STH/ASM (團隊達成率%)</option>
                         <option value="role_5" selected>理專 RM (單筆銷量萬)</option>
                         <option value="role_6">金服/房貸組長 (團隊達成率%)</option>
                         <option value="role_7">電銷/多元組長 (團隊達成率%)</option>
@@ -398,8 +386,6 @@ body { background-color: #cbd5e1; }
                         <option value="role_5_pinebridge">柏瑞 (住宿/按摩枕)</option>
                         <option value="role_5_manulife">宏利/安本 (李白白/喇叭)</option>
                         <option value="role_5_nomura">野村/高盛 (教育訓練)</option>
-                        <option value="role_5_uob">大華銀 (清淨機)</option>
-                        <option value="role_5_invesco">景順 (餐具保溫袋)</option>
                         <option value="role_5_amundi">東方匯理 (香檳)</option>
                         <option value="role_5_general">👑 菁英爭霸賽 (總銷量)</option>
                     </select>
@@ -476,80 +462,58 @@ body { background-color: #cbd5e1; }
 
 <script>
 // ==========================================
-// 1. 安全加密與登入機制邏輯 (5~6 碼檢核 + 密碼未填自動帶入)
+// 1. 安全登入與靜默流量統計機制 (Google Sheets)
 // ==========================================
-const APP_SECRET_KEY = "TonyApp2026_SecureKey";
-function encryptData(data) { return CryptoJS.AES.encrypt(JSON.stringify(data), APP_SECRET_KEY).toString(); }
-function decryptData(ciphertext) {
-    if(!ciphertext) return null;
-    try { return JSON.parse(CryptoJS.AES.decrypt(ciphertext, APP_SECRET_KEY).toString(CryptoJS.enc.Utf8)); } catch(e) { return null; }
+const GAS_WEB_APP_URL = "YOUR_GAS_URL_HERE"; // 請替換為您的 GAS 網址
+
+function silentPingGAS(userName) {
+    if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_URL_HERE") return;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('zh-TW');
+    const timeStr = now.toLocaleTimeString('zh-TW');
+    const url = `${GAS_WEB_APP_URL}?user=${encodeURIComponent(userName)}&date=${encodeURIComponent(dateStr)}&time=${encodeURIComponent(timeStr)}`;
+    fetch(url, { mode: 'no-cors' }).then(() => {}).catch((e) => {});
 }
 
-let appDB = decryptData(localStorage.getItem('SecureAppDB')) || { users: {}, logs: [] };
+// 一般使用者：免密碼直接進入系統並靜默記錄
+function enterSystem() {
+    silentPingGAS("一般同仁"); 
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').style.display = 'flex';
+    loadDailyQuote(); 
+    renderTable();
+}
 
-function handleLogin() {
-    const user = document.getElementById('username').value.trim();
-    let pass = document.getElementById('password').value.trim();
-    
-    if (!user) return alert("請輸入帳號！");
-    
-    // 若未填寫密碼，自動將密碼視同使用者名稱
-    if (!pass) {
-        pass = user;
-    }
+// 切換顯示管理員登入表單
+function toggleAdminForm() {
+    const form = document.getElementById('adminForm');
+    const primaryBtn = document.getElementById('primaryEntryBtn');
+    form.classList.toggle('hidden');
+    if(!form.classList.contains('hidden')) { primaryBtn.classList.add('opacity-50'); } 
+    else { primaryBtn.classList.remove('opacity-50'); }
+}
 
-    // 管理員例外處理
+// 管理員專屬登入驗證
+function handleAdminLogin() {
+    const user = document.getElementById('adminUser').value.trim();
+    const pass = document.getElementById('adminPass').value.trim();
+
     if (user === "Tony" && pass === "661001") {
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('adminPanel').classList.remove('hidden');
-        renderAdminStats(); return;
-    }
-    
-    // 【檢核條件】帳號長度必須 5~6 碼 (包含數字或英文)
-    if (user.length < 5 || user.length > 6) {
-        return alert("安全提示：帳號長度須為 5 至 6 碼（可為數字或英文名字）！");
-    }
-    
-    // 首次登入建檔
-    if (!appDB.users[user]) { 
-        appDB.users[user] = { password: pass, loginCount: 0 }; 
-        alert(`首次登入成功！已為您註冊帳號：${user}`); 
-    }
-    
-    // 驗證密碼
-    if (appDB.users[user].password === pass) {
-        appDB.users[user].loginCount += 1;
-        appDB.logs.push({ user: user, time: new Date().toLocaleString() });
-        localStorage.setItem('SecureAppDB', encryptData(appDB));
-        
+        silentPingGAS("管理員 Tony");
+        alert("登入成功！請直接開啟您的 Google 試算表查看最新總流量統計。");
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').style.display = 'flex';
-        loadDailyQuote(); renderTable();    
-    } else { 
-        alert("密碼錯誤，請重新輸入！"); 
+        loadDailyQuote(); 
+        renderTable();
+    } else {
+        alert("管理員帳號或密碼錯誤！");
     }
 }
 
 function logout() { location.reload(); }
 
-function renderAdminStats() { 
-    let html = '<h2 class="text-xl font-bold mb-4 border-b pb-2 text-slate-800">使用者登入次數</h2>';
-    for (let u in appDB.users) {
-        html += `<div class="mb-3 flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <span class="font-bold text-indigo-700 text-lg"><i class="fas fa-user mr-2 text-slate-400"></i>${u}</span>
-                    <span class="text-base font-bold text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm">${appDB.users[u].loginCount} 次</span>
-                 </div>`;
-    }
-    html += '<h2 class="text-xl font-bold mt-8 mb-4 border-b pb-2 text-slate-800">最新登入紀錄</h2><ul class="text-sm text-slate-500 space-y-2">';
-    appDB.logs.slice(-20).reverse().forEach(log => {
-        html += `<li class="bg-slate-50 p-3 rounded-lg border border-slate-100"><i class="far fa-clock mr-2"></i> [${log.time}] <b class="text-slate-700">${log.user}</b> 登入</li>`;
-    });
-    html += '</ul>';
-    document.getElementById('adminStats').innerHTML = html;
-}
-
 // ==========================================
-// 2. 基金資料庫與 UI 邏輯
+// 2. UI 互動邏輯與金句
 // ==========================================
 function loadDailyQuote() {
     const quotes = ["「不要等待機會，而要創造機會。」", "「今天的每一次拜訪，都是明天成交的種子。」", "「用你的專業，為客戶的財富保駕護航。」"];
@@ -577,11 +541,11 @@ function toggleStep(id) {
     el.classList.toggle('hidden'); icon.classList.toggle('rotate-180');
 }
 
-// 動態閃爍的限量標籤語法 (共用)
 const getQuotaTag = (text) => `<span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-bold animate-pulse-soft shadow-sm whitespace-nowrap ml-1">${text}</span>`;
 
-// --- 包含「拆帳比率」、「前/後收型」完整代碼的基金資料庫 ---
-// 根據來源檔案 100% 收錄所有專案與特選基金，確保零散失。
+// ==========================================
+// 3. 基金資料庫 (收錄所有來源的前後收代碼與費率)
+// ==========================================
 const fundData = [
   { type: '專案', company: '聯博投信', categoryName: '聯博 Q2 專案', month: '0.08~0.25%', quarter: '0.32~1.00%', prize: `滿500萬送 Sony耳機 ${getQuotaTag('限量 40 名')}`, color: 'bg-blue-600', targets: [
       { name: '國際科技', frontCodes: 'AC01, AC04', backCodes: 'UA16', month: '0.25%', quarter: '1.00%', split: '100%' },
@@ -622,13 +586,11 @@ const fundData = [
       { name: '日本永續股票', frontCodes: 'AE62, AE64', backCodes: '無', month: '0.20%', quarter: '0.80%', split: '100%' },
       { name: '新興市場債券', frontCodes: 'AE72, AE73', backCodes: '無', month: '0.20%', quarter: '0.80%', split: '100%' }
   ]},
-  
-  // ============ 特選基金區 ============
   { type: '特選', company: '野村投信', categoryName: '野村/駿利特選', month: '0.08~0.15%', quarter: '0.24~0.45%', prize: `滿1200萬享教育訓練 ${getQuotaTag('限量 20 名')}`, color: 'bg-indigo-500', targets: [
       { name: 'e科技基金', frontCodes: 'IN', backCodes: '無', month: '0.08%', quarter: '0.24%', split: '100%' },
       { name: '駿利亨德森平衡', frontCodes: 'JS', backCodes: 'UH', month: '0.15%', quarter: '0.45%', split: '100%' }
   ]},
-  { type: '特選', company: '富達投信', categoryName: '富達特選', month: '0.08~0.15%', quarter: '0.24~0.45%', prize: `滿200萬送OSIM美眼舒 ${getQuotaTag('限量 10 名')}`, color: 'bg-purple-600', targets: [
+  { type: '特選', company: '富達投信', categoryName: '富達特選', month: '0.08~0.15%', quarter: '0.24~0.45%', prize: `滿200萬送OSIM美眼舒 ${getQuotaTag('限量')}`, color: 'bg-purple-600', targets: [
       { name: '日本價值基金', frontCodes: '依公告', backCodes: '無', month: '0.08%', quarter: '0.24%', split: '100%' },
       { name: '全球多重資產收益', frontCodes: '依公告', backCodes: '無', month: '0.15%', quarter: '0.45%', split: '100%' },
       { name: '美元非投資等級債', frontCodes: 'FD, FI', backCodes: 'FI', month: '0.10%', quarter: '0.30%', split: '100%' }
@@ -645,10 +607,6 @@ const fundData = [
   { type: '特選', company: '東方匯理', categoryName: '東方匯理', month: '0.08~0.15%', quarter: '0.24~0.45%', prize: `滿150萬送 Moët 香檳 ${getQuotaTag('每週 30 名')}`, color: 'bg-pink-600', targets: [
       { name: '美國鋒裕股票', frontCodes: '依公告', backCodes: '無', month: '0.08%', quarter: '0.24%', split: '100%' },
       { name: '策略收益債券', frontCodes: '依公告', backCodes: 'UR, UE', month: '0.15%', quarter: '0.45%', split: '100%' }
-  ]},
-  { type: '特選', company: '大華銀/景順', categoryName: '大華銀/景順系列', month: '0.15%', quarter: '0.45%', prize: `滿額送清淨機/保溫袋 ${getQuotaTag('限量')}`, color: 'bg-blue-400', targets: [
-      { name: '大華銀全系列基金', frontCodes: '依公告', backCodes: '依公告', month: '0.15%', quarter: '0.45%', split: '100%' },
-      { name: '景順全系列基金', frontCodes: '依公告', backCodes: '依公告', month: '0.15%', quarter: '0.45%', split: '100%' }
   ]},
   { type: '特選', company: '路博邁', categoryName: '路博邁系列', month: '0.08~0.20%', quarter: '0.24~0.60%', prize: '依總銷量併入大獎', color: 'bg-teal-600', targets: [
       { name: 'NB次世代通訊', frontCodes: '依公告', backCodes: '無', month: '0.08%', quarter: '0.24%', split: '100%' },
@@ -671,7 +629,6 @@ function renderTable() {
     const fType = typeFilter.value;
     listContainer.innerHTML = '';
     const filtered = fundData.filter(item => {
-        // 搜尋範圍涵蓋：名稱、代碼 (前後收皆可)
         const tMatch = item.targets.some(t => 
             t.name.toLowerCase().includes(term) || 
             (t.frontCodes && t.frontCodes.toLowerCase().includes(term)) ||
@@ -708,14 +665,12 @@ function showReward(index, dataArray) {
     const item = dataArray[index];
     document.getElementById('modalHeader').className = `p-5 text-white font-bold flex justify-between items-center shrink-0 text-lg ${item.color}`;
     
-    // UI 設計中將前收與後收明顯拆分
     let targetsHtml = item.targets.map(t => `
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
             <div class="font-bold text-slate-800 text-base flex justify-between items-center border-b border-slate-100 pb-2">
                 ${t.name}
                 <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-black">拆帳: ${t.split}</span>
             </div>
-            
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
                 <div class="flex items-start gap-2 text-sm">
                     <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold text-xs whitespace-nowrap">前收</span>
@@ -726,7 +681,6 @@ function showReward(index, dataArray) {
                     <span class="font-mono text-slate-600 break-words leading-tight mt-0.5">${t.backCodes || '無 / 依公告'}</span>
                 </div>
             </div>
-
             <div class="flex gap-2 text-sm mt-1">
                 <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded font-bold">月加碼: ${t.month}</span>
                 <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded font-black">季加碼: ${t.quarter}</span>
@@ -747,26 +701,24 @@ function showReward(index, dataArray) {
 }
 function closeRewardModal() { document.getElementById('rewardModal').classList.add('hidden'); }
 
-// --- 試算器邏輯 ---
+// ==========================================
+// 4. 試算器邏輯 (完整包含最新 2026 Q2 獎勵門檻)
+// ==========================================
 const thresholdsData = {
     role_1: [ { amount: 100, reward: '🏆 群英會資格 + 專案全壘打(遠百券最高$4,500)', condition: '區域當季「新資金、總銷、專案銷量」皆達100%' } ],
-    role_2: [ { amount: 60, reward: '✅ ASM專案基金達標 (遠百券 $3,000)', condition: '轄下專案達成60%' } ],
-    role_3: [ { amount: 100, reward: '🏆 群英會資格 + 專案全壘打(最高$4,500)', condition: '分行當季「新資金、總銷、專案」皆達100%' } ],
-    role_4: [ { amount: 70, reward: '✅ STH 轄下理專達標 (遠百券 $1,500)', condition: '轄下專案達成70%' } ],
+    role_4: [ { amount: 60, reward: '✅ ASM專案基金達標 (遠百券 $3,000)', condition: '轄下專案達成60%' }, { amount: 70, reward: '✅ STH專案基金達標 (遠百券 $1,500)', condition: '轄下專案達成70%' } ],
     role_5_ab: [ { amount: 500, reward: `Sony 耳機 ${getQuotaTag('限量40名')}`, condition: '銷量達500萬' } ],
     role_5_fs: [ { amount: 2000, reward: `兩天一夜教育訓練 ${getQuotaTag('限量20名')}`, condition: '銷量達2000萬' } ],
-    role_5_franklin: [ { amount: 400, reward: `教育訓練餐會 ${getQuotaTag('限量30名')}`, condition: '達400萬' }, { amount: 1000, reward: `鹿港永樂酒店 ${getQuotaTag('限量25名')}`, condition: '達1000萬' } ],
+    role_5_franklin: [ { amount: 400, reward: `教育訓練餐會 ${getQuotaTag('限量30名')}`, condition: '銷量達400萬' }, { amount: 1000, reward: `鹿港永樂酒店 ${getQuotaTag('限量25名')}`, condition: '銷量達1000萬' } ],
     role_5_pinebridge: [ { amount: 100, reward: `保溫瓶 ${getQuotaTag('限量30名')}`, condition: '達100萬' }, { amount: 300, reward: `按摩枕 ${getQuotaTag('限量30名')}`, condition: '達300萬' }, { amount: 800, reward: `威斯汀住宿 ${getQuotaTag('限量30名')}`, condition: '達800萬' } ],
     role_5_manulife: [ { amount: 50, reward: `野餐墊 ${getQuotaTag('限量30名')}`, condition: '達50萬' }, { amount: 300, reward: `藍芽喇叭 ${getQuotaTag('限量30名')}`, condition: '達300萬' }, { amount: 500, reward: `李白白餐會 ${getQuotaTag('限量30名')}`, condition: '達500萬' } ],
     role_5_nomura: [ { amount: 1200, reward: `兩天一夜教育訓練 ${getQuotaTag('限量20名')}`, condition: '達1200萬' } ],
-    role_5_uob: [ { amount: 120, reward: `空氣清淨機 ${getQuotaTag('限量30名')}`, condition: '達120萬' } ],
-    role_5_invesco: [ { amount: 100, reward: `高檔餐具+保溫袋 ${getQuotaTag('限量30名')}`, condition: '達100萬' } ],
     role_5_amundi: [ { amount: 150, reward: `Moët 香檳 ${getQuotaTag('每週30名')}`, condition: '達150萬' } ],
     role_5_general: [ { amount: 6000, reward: '🏆 最高現金 ($19,000)', condition: '總業績達200%' } ],
-    role_6: [ { amount: 100, reward: '✅ 組長 RSP 門檻 ($3,000)', condition: '轄下RSP新戶達100%' } ],
-    role_7: [ { amount: 100, reward: '✅ TM/DS組長 RSP 門檻 ($2,500)', condition: '轄下RSP新戶達100%' } ],
-    role_8: [ { amount: 10, reward: '✅ 專員 RSP 門檻 ($2,000)', condition: '新戶達10戶+AUM門檻' } ],
-    role_9: [ { amount: 3, reward: '✅ TM/DS專員 RSP 門檻 ($1,500)', condition: '新戶達3戶+AUM門檻' } ]
+    role_6: [ { amount: 100, reward: '✅ FSS/AO組長 RSP 門檻 ($3,000)', condition: '轄下RSP戶數達100%' } ],
+    role_7: [ { amount: 100, reward: '✅ TM/DS組長 RSP 門檻 ($2,500)', condition: '轄下RSP戶數達100%' } ],
+    role_8: [ { amount: 10, reward: '✅ MB/AO專員 RSP 門檻 ($2,000)', condition: '新戶達10戶+AUM10萬' } ],
+    role_9: [ { amount: 3, reward: '✅ TM/DS專員 RSP 門檻 ($1,500)', condition: '新戶達3戶+AUM1萬' } ]
 };
 
 function updateCalcMode() {
@@ -779,7 +731,7 @@ function updateCalcMode() {
         rmContainer.classList.remove('hidden'); unitEl.innerText = '萬'; updateRMPrompt();
     } else {
         rmContainer.classList.add('hidden');
-        if (['role_1', 'role_2', 'role_3', 'role_4', 'role_6', 'role_7'].includes(mode)) { unitEl.innerText = '%'; inputEl.placeholder = "輸入 %"; } 
+        if (['role_1', 'role_4', 'role_6', 'role_7'].includes(mode)) { unitEl.innerText = '%'; inputEl.placeholder = "輸入 %"; } 
         else { unitEl.innerText = '戶'; inputEl.placeholder = "戶數"; }
     }
     document.getElementById('calcInput').value = '';
@@ -798,7 +750,7 @@ function updateCalculator() {
     let dataKey = baseMode;
     let unitText = '萬';
     if (baseMode === 'role_5') dataKey = document.getElementById('rmCampaign').value;
-    else if (['role_1', 'role_2', 'role_3', 'role_4', 'role_6', 'role_7'].includes(baseMode)) unitText = '%';
+    else if (['role_1', 'role_4', 'role_6', 'role_7'].includes(baseMode)) unitText = '%';
     else if (['role_8', 'role_9'].includes(baseMode)) unitText = '戶';
     
     const inputVal = document.getElementById('calcInput').value;
@@ -815,7 +767,7 @@ function updateCalculator() {
         if (current >= t.amount) { achieved.push(t); prevT = t; } else { upcoming.push(t); if (!nextT) nextT = t; }
     });
     
-    document.getElementById('latestAchievement').innerHTML = prevT ? `<div class="bg-green-100 text-green-800 p-3 rounded-xl text-sm text-left shadow-sm border border-green-200"><b><i class="fas fa-gift"></i> 最新:</b> ${prevT.reward}<br><span class="text-xs text-green-600 mt-1 block">門檻: ${prevT.condition}</span></div>` : '';
+    document.getElementById('latestAchievement').innerHTML = prevT ? `<div class="bg-green-100 text-green-800 p-3 rounded-xl text-sm text-left shadow-sm border border-green-200"><b><i class="fas fa-gift"></i> 最新:</b> ${prevT.reward}<br><span class="text-xs text-green-600 mt-1 block">門檻條件: ${prevT.condition}</span></div>` : '';
            
     if (nextT) {
         document.getElementById('shortfallAmount').innerText = `差 ${(nextT.amount - current).toFixed(1).replace('.0','')} ${unitText}`;
@@ -838,6 +790,7 @@ function updateCalculator() {
 document.addEventListener("DOMContentLoaded", () => {
     searchInput.addEventListener('input', renderTable);
     typeFilter.addEventListener('change', renderTable);
+    updateCalcMode();
 });
 </script>
 </body>
