@@ -8,11 +8,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="北一區理專">
 <meta name="theme-color" content="#4338ca">
+<!-- 產生 Web App Manifest 以支援 Android 加入主畫面 -->
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E5%8C%97%E4%B8%80%E5%8D%80%E7%90%86%E5%B0%88App%22%2C%22short_name%22%3A%22%E5%8C%97%E4%B8%80%E5%8D%80%E7%90%86%E5%B0%88%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%234338ca%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2942%2F2942150.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 <title>北一區 | 理專戰略 App</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-<!-- 引入 CryptoJS 進行資料加密 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 <style>
 body { background-color: #cbd5e1; }
@@ -27,7 +27,6 @@ body { background-color: #cbd5e1; }
 .pt-safe { padding-top: env(safe-area-inset-top); }
 .nav-item { color: #94a3b8; transition: all 0.2s; }
 .nav-active { color: #4f46e5; transform: translateY(-2px); }
-/* 強化多觸控的點擊下壓回饋 */
 .active-scale { transition: transform 0.1s ease, box-shadow 0.1s ease; }
 .active-scale:active { transform: scale(0.96); opacity: 0.9; }
 .progress-bar-striped {
@@ -39,7 +38,6 @@ body { background-color: #cbd5e1; }
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
-/* 限量標籤閃爍特效 */
 @keyframes pulse-soft {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.85; transform: scale(1.05); box-shadow: 0 0 8px rgba(239,68,68,0.5); }
@@ -50,8 +48,8 @@ body { background-color: #cbd5e1; }
 <body>
 
 <!-- 登入與入口畫面 -->
-<div id="loginScreen" class="fixed inset-0 bg-indigo-900 z-50 flex flex-col items-center justify-center p-6">
-  <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm animate-fade-in">
+<div id="loginScreen" class="fixed inset-0 bg-indigo-900 z-50 flex flex-col items-center justify-center p-6 overflow-y-auto">
+  <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm animate-fade-in my-auto">
     <div class="text-center mb-8">
         <div class="bg-indigo-100 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-inner">
             <i class="fas fa-rocket text-4xl text-indigo-600"></i>
@@ -67,21 +65,58 @@ body { background-color: #cbd5e1; }
       </button>
 
       <!-- 管理員入口切換按鈕 -->
-      <div class="text-center mt-4">
-          <button onclick="toggleAdminForm()" class="text-xs font-bold text-slate-400 hover:text-indigo-500 transition px-4 py-2">
+      <div class="text-center mt-2 flex justify-between px-2">
+          <button onclick="toggleAdminForm()" class="text-xs font-bold text-slate-400 hover:text-indigo-500 transition py-2">
              <i class="fas fa-user-shield"></i> 管理員登入
+          </button>
+          <button onclick="showInstallModal()" class="text-xs font-bold text-indigo-500 hover:text-indigo-700 transition py-2 bg-indigo-50 px-3 rounded-full active-scale">
+             <i class="fas fa-mobile-alt"></i> 加到桌面
           </button>
       </div>
 
       <!-- 管理員專屬輸入表單 (預設隱藏) -->
       <div id="adminForm" class="hidden mt-4 pt-4 border-t border-slate-100 space-y-3 animate-fade-in">
           <div class="text-sm font-bold text-indigo-800 mb-2"><i class="fas fa-lock mr-1"></i> 後台驗證</div>
-          <input type="text" id="adminUser" placeholder="管理員帳號" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-base transition-all">
+          <input type="text" id="adminUser" placeholder="管理員帳號 (tony)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-base transition-all">
           <input type="password" id="adminPass" placeholder="管理員密碼" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-base transition-all">
           <button onclick="handleAdminLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition shadow active-scale text-base">確認登入</button>
       </div>
     </div>
   </div>
+</div>
+
+<!-- 安裝 App 說明 Modal -->
+<div id="installModal" class="fixed inset-0 bg-black/60 hidden z-[1] flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in">
+        <div class="p-5 border-b flex justify-between items-center bg-indigo-50">
+            <h3 class="font-bold text-indigo-900 text-lg flex items-center gap-2"><i class="fas fa-mobile-alt"></i> 安裝至手機桌面</h3>
+            <button onclick="closeInstallModal()" class="text-slate-400 hover:text-slate-600 text-xl active-scale p-1"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-6 space-y-5">
+            <p class="text-sm text-slate-600 leading-relaxed font-bold">將此 App 加入主畫面，未來免輸入網址，一鍵快速開啟戰略版！</p>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fab fa-apple text-2xl text-slate-700"></i> iOS (iPhone)</div>
+                <div class="text-xs text-slate-600 space-y-2 font-bold">
+                    <p>1. 請使用 <b>Safari</b> 瀏覽器開啟本網頁。</p>
+                    <p>2. 點擊畫面正下方的 <b>分享圖示</b> <i class="fas fa-share-square border border-slate-300 rounded p-1 mx-1"></i>。</p>
+                    <p>3. 選單往下滑，選擇 <b>「加入主畫面」</b> <i class="fas fa-plus-square border border-slate-300 rounded p-1 mx-1"></i>。</p>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fab fa-android text-green-500 text-2xl"></i> Android (安卓)</div>
+                <div class="text-xs text-slate-600 space-y-2 font-bold">
+                    <p>1. 請使用 <b>Chrome</b> 瀏覽器開啟本網頁。</p>
+                    <p>2. 點擊畫面右上角的 <b>選單圖示</b> <i class="fas fa-ellipsis-v border border-slate-300 rounded px-2 py-1 mx-1"></i>。</p>
+                    <p>3. 選擇 <b>「加到主畫面」</b> 或 <b>「安裝應用程式」</b>。</p>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 bg-white border-t">
+            <button onclick="closeInstallModal()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold active-scale text-lg shadow-md">我知道了</button>
+        </div>
+    </div>
 </div>
 
 <!-- App 主程式容器 -->
@@ -132,7 +167,7 @@ body { background-color: #cbd5e1; }
         <div id="view-strategyMax" class="space-y-4 hidden animate-fade-in">
             <div class="bg-gradient-to-r from-amber-100 to-orange-100 p-5 rounded-2xl shadow-sm border border-orange-200">
                 <h2 class="text-lg font-black text-slate-800 mb-1">🎯 獎勵最大化 Combo</h2>
-                <p class="text-xs text-slate-500">選擇您的職級，<b>點擊各 STEP</b> 查看達人解析與實戰舉例。</p>
+                <p class="text-xs text-slate-500">選擇您的職級，<b>點擊各 STEP</b> 查看達人解析與實戰舉例。[2]</p>
             </div>
             
             <div class="space-y-3">
@@ -203,7 +238,6 @@ body { background-color: #cbd5e1; }
                             </div>
                             <div id="mgr-s1" class="hidden bg-purple-50 p-4 border-t border-purple-100 text-xs">
                                 <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>帶領整間分行或區域，確保「新資金」和「總銷量」兩大指標都達到100%的及格線，取得群英會門票。</p>
-                                <p class="text-purple-800 bg-purple-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>督促團隊追蹤到期資金轉單，並開發新客匯入資金，雙雙達標後即可獲取群英會資格與排名。</p>
                             </div>
                         </div>
 
@@ -214,7 +248,6 @@ body { background-color: #cbd5e1; }
                             </div>
                             <div id="mgr-s2" class="hidden bg-red-50 p-4 border-t border-red-100 text-xs">
                                 <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>在總量達標的基礎上，確保「專案基金」的銷量也達成100%，主管就能領取額外的禮券獎勵。</p>
-                                <p class="text-red-800 bg-red-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>分行經理帶領全行主力推廣富蘭克林與柏瑞專案，專案銷量順利過線，額外獲得 <b>$4,500 遠百券</b>。</p>
                             </div>
                         </div>
 
@@ -225,7 +258,6 @@ body { background-color: #cbd5e1; }
                             </div>
                             <div id="mgr-s3" class="hidden bg-green-50 p-4 border-t border-green-100 text-xs">
                                 <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>只要從其他銀行搬新錢過來(新資金)，且淨銷量大於零，團隊這筆業績會以 1.1 倍計算。</p>
-                                <p class="text-green-800 bg-green-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>團隊找客戶從他行匯入 1,000 萬買基金，系統認定為 <b>1,100 萬</b>，讓分行排名躍升。</p>
                             </div>
                         </div>
                     </div>
@@ -238,7 +270,6 @@ body { background-color: #cbd5e1; }
                         <i class="fas fa-chevron-down text-slate-400 transition-transform" id="icon-sth"></i>
                     </button>
                     <div id="acc-sth" class="hidden px-5 pb-5 space-y-3 bg-slate-50 border-t border-slate-100 pt-4">
-                        
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('sth-s1')">
                             <div class="p-4 border-l-4 border-cyan-400 flex justify-between items-center">
                                 <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 1. 鞏固團隊及格率</div><div class="font-bold text-slate-700 text-sm">轄下專案基金達標 60~70%</div></div>
@@ -246,17 +277,6 @@ body { background-color: #cbd5e1; }
                             </div>
                             <div id="sth-s1" class="hidden bg-cyan-50 p-4 border-t border-cyan-100 text-xs">
                                 <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>ASM的首要門檻是專案達成60%，STH為70%，達標即可獲取遠百商品券。</p>
-                                <p class="text-cyan-800 bg-cyan-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>協助落後分行推廣專案基金，順利達標即可獲得 <b>1,500 ~ 3,000 券</b>。</p>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('sth-s2')">
-                            <div class="p-4 border-l-4 border-yellow-400 flex justify-between items-center">
-                                <div><div class="font-bold text-slate-400 text-xs mb-1">STEP 2. 爭取最高榮譽</div><div class="font-bold text-slate-700 text-sm">爭取群英會資格排名</div></div>
-                                <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-sth-s2"></i>
-                            </div>
-                            <div id="sth-s2" class="hidden bg-yellow-50 p-4 border-t border-yellow-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>系統會看「銷量總金額」進行全行排名，只要衝到第1名，就能獲得群英會門票。</p>
                             </div>
                         </div>
                     </div>
@@ -276,7 +296,6 @@ body { background-color: #cbd5e1; }
                             </div>
                             <div id="fss-s1" class="hidden bg-emerald-50 p-4 border-t border-emerald-100 text-xs">
                                 <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>每日緊盯團隊進度，確保底下的專員在「RSP新戶數」與「AUM」都達到100%門檻。</p>
-                                <p class="text-emerald-800 bg-emerald-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>規定組員每天早上回報約訪名單，全組達標過第一關。</p>
                             </div>
                         </div>
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer active-scale" onclick="toggleStep('fss-s2')">
@@ -285,8 +304,7 @@ body { background-color: #cbd5e1; }
                                 <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-fss-s2"></i>
                             </div>
                             <div id="fss-s2" class="hidden bg-blue-50 p-4 border-t border-blue-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>成功輔導團隊達標後，將進行戶數達成率排序，全國前6名的組長即享領導加碼。</p>
-                                <p class="text-blue-800 bg-blue-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>全組順利達成率超標並進入前6，組長直接獲頒 <b>$3,000 遠百商品券</b>。</p>
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>輔導團隊達標後，全國前6名的組長即享領導加碼。</p>
                             </div>
                         </div>
                     </div>
@@ -352,8 +370,7 @@ body { background-color: #cbd5e1; }
                                 <i class="fas fa-chevron-down text-slate-300 text-xs transition-transform" id="icon-tm-s2"></i>
                             </div>
                             <div id="tm-s2" class="hidden bg-emerald-50 p-4 border-t border-emerald-100 text-xs">
-                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>門檻比一般專員低！只要找到3個新戶做定期定額，總金額滿1萬元即可爭取前10名！</p>
-                                <p class="text-emerald-800 bg-emerald-100 p-2 rounded-lg"><span class="font-black"><i class="fas fa-bullseye text-red-500"></i> 實戰舉例：</span>打電話成功邀請3位薪轉戶設定每月扣款 3,500元，輕鬆達標領取 <b>$1,500 券</b>。</p>
+                                <p class="text-slate-700 mb-2"><span class="text-indigo-700 font-black"><i class="fas fa-lightbulb text-yellow-500"></i> 達人解析：</span>門檻比一般專員低！只要找到3個新戶做定期定額，總金額滿1萬元即可爭取前10名領 <b>$1,500 券</b>。</p>
                             </div>
                         </div>
                     </div>
@@ -447,7 +464,7 @@ body { background-color: #cbd5e1; }
 </div>
 
 <!-- Modal 區塊 (獎勵詳情) -->
-<div id="rewardModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+<div id="rewardModal" class="fixed inset-0 bg-black/60 hidden z-[3] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[85vh] animate-fade-in">
         <div id="modalHeader" class="p-5 text-white font-bold flex justify-between items-center shrink-0 text-lg">
             <span>標的明細</span>
@@ -464,7 +481,7 @@ body { background-color: #cbd5e1; }
 // ==========================================
 // 1. 安全登入與靜默流量統計機制 (Google Sheets)
 // ==========================================
-const GAS_WEB_APP_URL =  "https://script.google.com/macros/s/AKfycbxj8sFC3N8GEAzX4TQdOnaXfDnli7BuuE621m04GBCrGX5jotmOc8qBDLIl1YQ8wY63/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxj8sFC3N8GEAzX4TQdOnaXfDnli7BuuE621m04GBCrGX5jotmOc8qBDLIl1YQ8wY63/exec"; 
 
 function silentPingGAS(userName) {
     if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_URL_HERE") return;
@@ -498,7 +515,8 @@ function handleAdminLogin() {
     const user = document.getElementById('adminUser').value.trim();
     const pass = document.getElementById('adminPass').value.trim();
 
-    if (user === "Tony" && pass === "661001") {
+    // 使用 toLowerCase() 確保大小寫 tony 或 Tony 都能登入
+    if (user.toLowerCase() === "tony" && pass === "661001") {
         silentPingGAS("管理員 Tony");
         alert("登入成功！請直接開啟您的 Google 試算表查看最新總流量統計。");
         document.getElementById('loginScreen').classList.add('hidden');
@@ -512,11 +530,21 @@ function handleAdminLogin() {
 
 function logout() { location.reload(); }
 
+// --- 安裝 Modal 控制 ---
+function showInstallModal() { document.getElementById('installModal').classList.remove('hidden'); }
+function closeInstallModal() { document.getElementById('installModal').classList.add('hidden'); }
+
 // ==========================================
 // 2. UI 互動邏輯與金句
 // ==========================================
 function loadDailyQuote() {
-    const quotes = ["「不要等待機會，而要創造機會。」", "「今天的每一次拜訪，都是明天成交的種子。」", "「用你的專業，為客戶的財富保駕護航。」"];
+    const quotes = [
+        "「不要等待機會，而要創造機會。」", 
+        "「今天的每一次拜訪，都是明天成交的種子。」", 
+        "「用你的專業，為客戶的財富保駕護航。」",
+        "「專業帶來信任，信任帶來業績。」",
+        "「沒有所謂的運氣，只有在看不見的地方默默努力。」"
+    ];
     document.getElementById('dailyQuoteDisplay').innerText = quotes[Math.floor(Math.random() * quotes.length)];
 }
 
